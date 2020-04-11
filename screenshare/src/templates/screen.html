@@ -1,34 +1,45 @@
 <html>
   <head>
     <script src="js/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
     <script type="text/javascript">
       const fileReader = new FileReader()
 
-      function InitThis() {
-          ctx = document.getElementById('myCanvas').getContext("2d");
-          $('#myCanvas').mousedown(function (e) {
-              mousePressed = true;
-              Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, false);
+      var positions = [];
+      var mousePressed = false;
+      function run() {
+          $('#screen').mousedown(function (e) {
+            mousePressed = true;
+            positions.push({x:e.pageX - $(this).offset().left,y:e.pageY - $(this).offset().top});
           });
 
-          $('#myCanvas').mousemove(function (e) {
-              if (mousePressed) {
-                  Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, true);
-              }
+          $('#screen').mousemove(function (e) {
+            if (mousePressed) {
+              positions.push({x:e.pageX - $(this).offset().left,y:e.pageY - $(this).offset().top});
+            }
           });
 
-          $('#myCanvas').mouseup(function (e) {
-              mousePressed = false;
+           $('#screen').mouseup(function () {
+            mousePressed = false;
+            positions.push({x:-1,y:-1});
+
+            console.log(positions);
+
           });
-              $('#myCanvas').mouseleave(function (e) {
-              mousePressed = false;
+          $('#screen').mouseleave(function () {
+            mousePressed = false;
+            positions.push({x:-1,y:-1});
+
+            console.log(positions);
           });
-      }
+        }
+
 
       function fetchImage() {
         new Promise((res, rej) => {
-          const url = "/screen.png?random=" + new Date().getTime()
-          axios.get(url, { responseType: 'blob' })
+          const url = "/screen.png?random=" + new Date().getTime() + "&positions=" + JSON.stringify(positions)
+          console.log('positions: ', positions)
+          axios.get(url, {responseType: 'blob' })
             .then(function (response) {
               document.images["screen"].src = URL.createObjectURL(response.data)
               res(fetchImage())
@@ -37,11 +48,11 @@
         })
       }
 
-      document.addEventListener("DOMContentLoaded", fetchImage)
+       $(document).ready(function () {run();})
       document.addEventListener("DOMContentLoaded", fetchImage)
     </script>
   </head>
   <body>
-    <img width="100%" id="screen">
+      <img  width="100%"  draggable="false" id="screen">
   </body>
 </html>
